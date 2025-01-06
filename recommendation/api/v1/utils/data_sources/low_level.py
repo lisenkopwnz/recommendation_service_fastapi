@@ -1,12 +1,22 @@
+import asyncio
+
 from recommendation.config import settings
+import aiofiles
 
+class DataLoader:
+    def __init__(self, spark: SparkSession):
+        self.spark = spark
 
-class FileHandler:
-    def __init__(self, file, save_path = settings.file_system_path):
-        self.file = file
-        self.save_path = save_path
+    async def load_data(self):
+        """Загружает CSV-файл в DataFrame."""
+        df = await asyncio.to_thread(
+            spark.read.csv, self.save_path, header=True, inferSchema=True
+        )
 
-    async def save_file(self):
-        # Сохраняем файл
-        with open(self.save_path, "wb") as buffer:
-            buffer.write(await self.file.read())
+        # Проверяем наличие необходимых колонок
+        required_columns = ["movie_id", "title", "description", "rating", "publication_date", "categories", "tags"]
+        if not all(column in df.columns for column in required_columns):
+            raise ValueError(
+                "CSV должен содержать колонки: movie_id, title, description, rating, publication_date, categories, tags")
+
+        return df
