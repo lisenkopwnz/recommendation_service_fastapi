@@ -1,9 +1,14 @@
+import logging
 import os
 import aiofiles
 from typing import Union, BinaryIO
 from fastapi import UploadFile
 from recommendation.config import settings
+from recommendation.logging_config import setup_logger
 
+
+setup_logger() #Настройка логера
+logger = logging.getLogger(__name__)
 
 class FileHandler:
     """
