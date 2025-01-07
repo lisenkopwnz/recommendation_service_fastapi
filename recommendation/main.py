@@ -5,6 +5,10 @@ from fastapi import FastAPI, Body
 from starlette import status
 from starlette.responses import FileResponse, JSONResponse
 
+from recommendation.logging_config import setup_logger
+
+setup_logger()
+
 app = FastAPI()
 
 

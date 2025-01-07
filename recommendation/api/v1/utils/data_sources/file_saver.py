@@ -1,16 +1,14 @@
-import logging
 import os
 import aiofiles
-from typing import Union, BinaryIO
 from fastapi import UploadFile
+
+from recommendation.api.v1.utils.data_sources.interface import DataSourceABC
 from recommendation.config import settings
 from recommendation.logging_config import setup_logger
 
+logger = setup_logger()
 
-setup_logger() #Настройка логера
-logger = logging.getLogger(__name__)
-
-class FileHandler:
+class FileHandlerCSV(DataSourceABC):
     """
     Класс для обработки файлов: сохранения на диск и проверки директорий.
 
@@ -19,7 +17,7 @@ class FileHandler:
         save_path: Полный путь для сохранения файла.
     """
 
-    def __init__(self, file: Union[UploadFile, BinaryIO], save_path: str = settings.file_system_path) -> None:
+    def __init__(self, file:UploadFile, save_path: str = settings.file_system_path) -> None:
         self.file = file
         self.save_path = save_path
         self.ensure_directory_exists()
@@ -34,6 +32,7 @@ class FileHandler:
         try:
             os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
         except OSError as e:
+            logger.error(e)
             raise RuntimeError(f"Не удалось создать директорию: {e}")
 
     async def save_file(self) -> None:
@@ -47,4 +46,5 @@ class FileHandler:
             async with aiofiles.open(self.save_path, "wb") as buffer:
                 await buffer.write(await self.file.read())
         except Exception as e:
+            logger.error("dfdffgfgd")
             raise RuntimeError(f"Ошибка при сохранении файла: {e}")
