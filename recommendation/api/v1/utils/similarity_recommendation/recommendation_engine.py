@@ -1,194 +1,166 @@
-from pyspark.pandas import DataFrame
-from pyspark.sql.connect.functions import concat_ws
-
-from pyspark.sql import SparkSession
-from pyspark.ml.feature import Tokenizer, HashingTF, IDF, Normalizer
-from pyspark.sql.functions import col, coalesce, lit, concat_ws
-from pyspark.sql.types import FloatType
-from pyspark.ml.linalg import DenseVector
+import pandas as pd
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from collections import defaultdict
 
-from recommendation.api.v1.utils.similarity_recommendation.interface import Recommendation
-from recommendation.config import settings
 
-class RecommendationEnginePySpark(Recommendation):
+class RecommendationEnginePandas:
     """
-    Движок для генерации рекомендаций на основе текстовых данных с использованием PySpark.
+    Рекомендательный движок, который генерирует рекомендации на основе текстовых данных.
 
-    Основные шаги:
-    1. Загрузка данных из CSV.
-    2. Подготовка текстовых данных (токенизация, TF-IDF, нормализация).
-    3. Вычисление косинусного сходства между элементами.
-    4. Генерация рекомендаций для каждого элемента.
+    Использует TF-IDF для векторного представления текста и косинусное сходство
+    для вычисления схожести между элементами.
+
+    Attributes:
+        path (str): Путь к CSV-файлу с данными.
+        top_n (int): Количество рекомендаций для каждого элемента.
     """
 
-    def __init__(self, spark: SparkSession, path: str, top_n: int):
+    def __init__(self, path: str, top_n: int):
         """
-        Инициализация движка рекомендаций.
+        Инициализирует RecommendationEnginePandas.
 
-        :param spark: Сессия Spark.
-        :param path: Путь к CSV-файлу с данными.
-        :param top_n: Количество рекомендаций для каждого элемента.
+        Args:
+            path (str): Путь к CSV-файлу с данными.
+            top_n (int): Количество рекомендаций для каждого элемента.
         """
-        self.spark = spark
         self.path = path
         self.top_n = top_n
 
-    @staticmethod
-    def _cosine_similarity(v1: DenseVector, v2: DenseVector) -> float:
-        """
-            Вычисляет косинусное сходство между двумя векторами.
-
-            :param v1: Первый вектор.
-            :param v2: Второй вектор.
-            :return: Косинусное сходство (float).
-        """
-        # Преобразуем DenseVector в массивы NumPy
-        v1_array = v1.toArray()
-        v2_array = v2.toArray()
-
-        # Вычисляем косинусное сходство
-        dot_product = np.dot(v1_array, v2_array)
-        norm_v1 = np.linalg.norm(v1_array)
-        norm_v2 = np.linalg.norm(v2_array)
-
-        # Возвращаем косинусное сходство
-        return float(dot_product / (norm_v1 * norm_v2))
-
-    def generate_recommendations(self) -> DataFrame:
+    def generate_recommendations(self) -> pd.DataFrame:
         """
         Генерирует рекомендации для всех элементов в данных.
 
-        :return: DataFrame с колонками:
-                 - id: Идентификатор элемента.
-                 - recommended_ids: Список рекомендованных идентификаторов.
+        Returns:
+            pd.DataFrame: DataFrame с колонками:
+                - id: Идентификатор элемента.
+                - recommended_ids: Список рекомендованных идентификаторов.
         """
-        cosine_similarity_udf = self.spark.udf.register(
-            "cosine_similarity", RecommendationEnginePySpark._cosine_similarity, FloatType()
+        df = self._upload_data()
+        df = self._prepare_for_cosine_similarity(df)
+        similarity_matrix = RecommendationEnginePandas._calculate_similarity_matrix(df)
+        recommendations_df = RecommendationEnginePandas._get_top_recommendations_from_matrix(
+            similarity_matrix, df, self.top_n
         )
-
-        normalized_data = self._prepare_for_cosine_similarity()
-
-        recommendations_df = normalized_data.select("id").distinct().rdd.map(
-            lambda row: (row["id"], self._get_top_recommendations(
-                item_id=row["id"],
-                top_n=self.top_n,
-                normalized_data=normalized_data,
-                cosine_similarity_udf=cosine_similarity_udf
-            ))
-        ).toDF(["id", "recommended_ids"])
-
         return recommendations_df
 
-    @staticmethod
-    def _get_top_recommendations(item_id: int, top_n: int, normalized_data, cosine_similarity_udf):
-        """
-            Возвращает топ-N рекомендаций для указанного элемента.
-
-            :param item_id: Идентификатор элемента.
-            :param top_n: Количество рекомендаций.
-            :param normalized_data: DataFrame с нормализованными векторами.
-            :param cosine_similarity_udf: UDF для вычисления косинусного сходства.
-            :return: Список идентификаторов рекомендованных элементов.
-        """
-        # Получение вектора целевого элемента
-        target_item = normalized_data.filter(col("id") == item_id).select("norm_features").collect()[0][0]
-
-        # Вычисление сходства и получение рекомендаций
-        recommendations = (((((normalized_data
-                           .withColumn("similarity", cosine_similarity_udf(col("norm_features"), lit(target_item))))
-                           .filter(col("id") != item_id))
-                           .orderBy(col("similarity").desc()))
-                           .select("id"))
-                           .limit(top_n))
-
-        return recommendations.select("id").rdd.flatMap(lambda x: x).collect()
-
-    def _prepare_for_cosine_similarity(self)-> DataFrame:
-        """
-            Подготавливает данные для вычисления косинусного сходства.
-
-            :return: DataFrame с нормализованными векторами.
-        """
-        df = self.uploading_data()  # Загрузка данных
-        df = RecommendationEnginePySpark._check_required_columns(df)  # Проверка наличия всех необходимых колонок
-        df = RecommendationEnginePySpark._default_empty_strings(df)  # Заполнение пустых значений в текстовых колонках
-        df = RecommendationEnginePySpark._combine_text_columns(df)  # Объединение текстовых данных (описание, категории, теги) в одну колонку
-        normalized_data = RecommendationEnginePySpark._transform_text_to_tfidf(df)
-        return normalized_data
-
-    def uploading_data(self) -> DataFrame:
+    def _upload_data(self) -> pd.DataFrame:
         """
         Загружает данные из CSV-файла.
 
-        :return: DataFrame с загруженными данными.
+        Returns:
+            pd.DataFrame: DataFrame с загруженными данными.
         """
-        df = self.spark.read.csv(self.path, header=True, inferSchema=True)
+        return pd.read_csv(self.path)
+
+    def _prepare_for_cosine_similarity(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Подготавливает данные для вычисления косинусного сходства.
+
+        Args:
+            df (pd.DataFrame): Входной DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame с колонками "id" и "text_data".
+        """
+        df = self._check_required_columns(df)
+        df = self._fill_empty_strings(df)
+        df = self._combine_text_columns(df)
         return df
 
     @staticmethod
-    def _check_required_columns(df: DataFrame):
+    def _check_required_columns(df: pd.DataFrame) -> pd.DataFrame:
         """
         Проверяет наличие обязательных колонок в DataFrame.
 
-        :param df: DataFrame для проверки.
-        :raises ValueError: Если отсутствуют обязательные колонки.
+        Args:
+            df (pd.DataFrame): DataFrame для проверки.
+
+        Raises:
+            ValueError: Если отсутствуют обязательные колонки.
+
+        Returns:
+            pd.DataFrame: Проверенный DataFrame.
         """
-        required_columns = settings
+        required_columns = ["id", "title", "description", "categories", "tags"]
         if not all(column in df.columns for column in required_columns):
             raise ValueError(
-                "CSV должен содержать колонки: id, title, description, rating, pub_date, categories, tags"
+                "CSV должен содержать колонки: id, title, description, categories, tags"
             )
+        return df
 
     @staticmethod
-    def _default_empty_strings(df: DataFrame) -> DataFrame:
+    def _fill_empty_strings(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Заменяет null в текстовых колонках на пустые строки.
+        Заменяет NaN в текстовых колонках на пустые строки.
 
-        :param df: Входной DataFrame.
-        :return: DataFrame с замененными значениями.
+        Args:
+            df (pd.DataFrame): Входной DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame с заполненными пустыми значениями.
         """
-        df = (
-            df.withColumn("title", coalesce(col("title"), lit("")))
-            .withColumn("description", coalesce(col("description"), lit("")))
-            .withColumn("categories", coalesce(col("categories"), lit("")))
-            .withColumn("tags", coalesce(col("tags"), lit("")))
+        text_columns = ["title", "description", "categories", "tags"]
+        df[text_columns] = df[text_columns].fillna("")
+        return df
+
+    @staticmethod
+    def _combine_text_columns(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Объединяет текстовые колонки в одну колонку `text_data`.
+
+        Args:
+            df (pd.DataFrame): Входной DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame с новой колонкой `text_data`.
+        """
+        df["text_data"] = (
+            df["title"] + " " + df["description"] + " " + df["categories"] + " " + df["tags"]
         )
         return df
 
     @staticmethod
-    def _combine_text_columns(df: DataFrame) -> DataFrame:
+    def _calculate_similarity_matrix(df: pd.DataFrame) -> np.ndarray:
         """
-        Объединяет текстовые колонки в одну.
+        Вычисляет матрицу сходства между элементами на основе текстовых данных.
 
-        :param df: Входной DataFrame.
-        :return: DataFrame с новой колонкой `text_data`.
+        Args:
+            df (pd.DataFrame): DataFrame с колонкой `text_data`.
+
+        Returns:
+            np.ndarray: Матрица сходства (N x N), где N — количество элементов.
         """
-        df = df.withColumn(
-            "text_data",
-            concat_ws(" ", col("title"), col("description"), col("categories"), col("tags"))
-        )
-        return df
+        tfidf_vectorizer = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = tfidf_vectorizer.fit_transform(df["text_data"])
+        return cosine_similarity(tfidf_matrix, tfidf_matrix)
 
     @staticmethod
-    def _transform_text_to_tfidf(df: DataFrame) -> DataFrame:
+    def _get_top_recommendations_from_matrix(
+        similarity_matrix: np.ndarray, df: pd.DataFrame, top_n: int
+    ) -> pd.DataFrame:
         """
-        Преобразует текстовые данные в числовые векторы с использованием TF-IDF и нормализует их.
+        Выбирает топ-N рекомендаций для каждого элемента из матрицы сходства.
 
-        :param df: DataFrame с текстовыми данными.
-        :return: DataFrame с нормализованными векторами.
+        Args:
+            similarity_matrix (np.ndarray): Матрица сходства.
+            df (pd.DataFrame): DataFrame с оригинальными данными.
+            top_n (int): Количество рекомендаций.
+
+        Returns:
+            pd.DataFrame: DataFrame с колонками:
+                - id: Идентификатор элемента.
+                - recommended_ids: Список рекомендованных идентификаторов.
         """
-        tokenizer = Tokenizer(inputCol="text_data", outputCol="words")
-        words_data = tokenizer.transform(df)
+        recommendations = defaultdict(list)
+        num_items = similarity_matrix.shape[0]
 
-        hashing_tf = HashingTF(inputCol="words", outputCol="raw_features", numFeatures=5000)
-        featurized_data = hashing_tf.transform(words_data)
+        for i in range(num_items):
+            similarity_scores = list(enumerate(similarity_matrix[i]))
+            similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+            top_recommendations = [df.iloc[j]["id"] for j, _ in similarity_scores[1 : top_n + 1]]
+            recommendations[df.iloc[i]["id"]] = top_recommendations
 
-        idf = IDF(inputCol="raw_features", outputCol="features")
-        idf_model = idf.fit(featurized_data)
-        rescaled_data = idf_model.transform(featurized_data)
-
-        normalizer = Normalizer(inputCol="features", outputCol="norm_features", p=2)
-        normalized_data = normalizer.transform(rescaled_data)
-
-        return normalized_data
+        return pd.DataFrame(list(recommendations.items()), columns=["id", "recommended_ids"])
+    
