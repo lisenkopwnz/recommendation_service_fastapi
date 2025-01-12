@@ -163,4 +163,3 @@ class RecommendationEnginePandas:
             recommendations[df.iloc[i]["id"]] = top_recommendations
 
         return pd.DataFrame(list(recommendations.items()), columns=["id", "recommended_ids"])
-    

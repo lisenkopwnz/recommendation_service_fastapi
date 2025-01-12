@@ -1,21 +1,20 @@
-import uuid
-from tkinter.font import names
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Body
-from starlette import status
-from starlette.responses import FileResponse, JSONResponse
+from fastapi import FastAPI
 
-from recommendation.logging_config import setup_logger
-
-setup_logger()
+from recommendation.db.models import engine
 
 app = FastAPI()
 
+@asynccontextmanager
+async def lifespan():
+    """
+    Асинхронный контекстный менеджер для управления жизненным циклом приложения.
 
+    Этот менеджер выполняет код при запуске и остановке приложения FastAPI.
+    Используется для управления ресурсами, такими как соединения с базой данных.
 
-@app.get("/")
-def root(response):  # FastAPI передаст объект Response сюда
-    # Устанавливаем заголовок в ответ
-    response.headers["X-Custom-Header"] = "CustomValue"
-    # Возвращаем тело ответа в формате JSON
-    return {"message": "Hello, world!"}
+    После завершения работы приложения (после `yield`), выполняется код для освобождения ресурсов.
+    """
+    yield
+    engine.dispose()
