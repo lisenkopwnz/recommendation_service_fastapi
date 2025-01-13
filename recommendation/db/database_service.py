@@ -1,12 +1,11 @@
-from typing import Dict, Any
-
+from typing import Dict, Any, Generator, List
 from recommendation.db.repository import DatabaseRepository
 
 
 class DataBaseService(DatabaseRepository):
     """
-        Высокоуровневый сервис для работы с базой данных.
-        """
+    Высокоуровневый сервис для работы с базой данных.
+    """
 
     def __init__(self, repository: DatabaseRepository):
         """
@@ -17,12 +16,15 @@ class DataBaseService(DatabaseRepository):
         """
         self.repository = repository
 
-    def bulk_update(self, query: str, params: Dict[str, Any]) -> None:
+    def bulk_update(self, query: str, params: Generator[List[Dict[str, Any]], None, None]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 
         Args:
-            query (str): Сырой SQL-запрос.
-            params (Dict[str, Any]): Параметры для запроса.
+            query (str): SQL-запрос.
+            params (Generator): Генератор, который возвращает данные пакетами.
+
+        Returns:
+            Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
-        self.repository.bulk_update(query, params)
+        return self.repository.bulk_update(query, params)
