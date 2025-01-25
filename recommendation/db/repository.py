@@ -10,7 +10,7 @@ class DatabaseRepository(ABC):
     @abstractmethod
     def bulk_update(self, query: str, params: Generator[List[Dict[str, Any]], None, None]) -> Dict[str, Any] | None:
         """
-        Выполняет массовое обновление данных с использованием сырого SQL-запроса.
+        Выполняет массовое обновление данных.
 
         Args:
             query (str): Сырой SQL-запрос.

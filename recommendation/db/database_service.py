@@ -2,7 +2,7 @@ from typing import Dict, Any, Generator, List
 from recommendation.db.repository import DatabaseRepository
 
 
-class DataBaseService(DatabaseRepository):
+class DataBaseService:
     """
     Высокоуровневый сервис для работы с базой данных.
     """

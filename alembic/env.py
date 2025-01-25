@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -6,6 +7,17 @@ from sqlalchemy import pool
 from alembic import context
 
 from recommendation.db.models import Base
+
+
+# Получаем переменные окружения
+POSTGRES_USER = os.getenv("POSTGRES_USER", "myuser")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "mypassword")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "mydatabase")
+
+# Формируем строку подключения
+SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
