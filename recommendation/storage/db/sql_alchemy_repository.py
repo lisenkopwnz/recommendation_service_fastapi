@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Generator
 import pandas
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from recommendation.db.repository import DatabaseRepository
+from recommendation.storage.repository import DatabaseRepository
 
 
 class SQLAlchemyRepository(DatabaseRepository):

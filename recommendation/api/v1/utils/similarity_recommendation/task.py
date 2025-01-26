@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
 from recommendation.config import settings
-from recommendation.db.database_service import DataBaseService
-from recommendation.db.models import SessionLocal
-from recommendation.db.sql_alchemy_repository import SQLAlchemyRepository
+from recommendation.storage.db.database_service import DataBaseService
+from recommendation.storage.db.models import SessionLocal
+from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepository
 
 
 @shared_task

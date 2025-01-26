@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from recommendation.db.models import engine
+from recommendation.storage.models import engine
 
 app = FastAPI()
 

@@ -6,13 +6,13 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from recommendation.db.models import Base
+from recommendation.storage.models import Base
 
 
 # Получаем переменные окружения
 POSTGRES_USER = os.getenv("POSTGRES_USER", "myuser")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "mypassword")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "storage")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "mydatabase")
 

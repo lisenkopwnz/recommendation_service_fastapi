@@ -1,5 +1,6 @@
 from typing import Dict, Any, Generator, List
-from recommendation.db.repository import DatabaseRepository
+
+from recommendation.storage.db.repository import DatabaseRepository
 
 
 class DataBaseService:

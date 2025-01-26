@@ -1,4 +1,5 @@
-from recommendation.db.models import SessionLocal
+from recommendation.storage.db.models import SessionLocal
+
 
 def get_db():
     """
