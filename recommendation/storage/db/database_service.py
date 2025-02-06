@@ -17,7 +17,7 @@ class DataBaseService:
         """
         self.repository = repository
 
-    def bulk_update(self, query: str, params: Generator[List[Dict[str, Any]], None, None]) -> Dict[str, Any] | None:
+    def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 

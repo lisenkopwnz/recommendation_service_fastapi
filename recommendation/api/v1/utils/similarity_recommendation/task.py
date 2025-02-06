@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
 from recommendation.config import settings
+from recommendation.storage.cache.storage_cache import RedisStorage
+from recommendation.storage.cache.storage_manager import CacheStorageManager
 from recommendation.storage.db.database_service import DataBaseService
 from recommendation.storage.db.models import SessionLocal
 from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepository
@@ -10,36 +12,44 @@ from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepositor
 
 @shared_task
 def generate_recommendation_task():
-    db: Session = SessionLocal()
+    db: Session = SessionLocal()  # Создаём сессию
     try:
-        # Создаём движок
+        # 1. Создаём движок и сервис для рекомендаций
         engine = RecommendationEnginePandas(settings.file_system_path, 20)
-
-        # Создаём сервис и передаём ему движок
         service = RecommendationService(engine)
 
-        # Генерируем рекомендации
+        # 2. Генерируем рекомендации
         result = service.generate_recommendations()
 
-        # Создаём репозиторий и сервис для работы с базой данных
+        # 3. Создаём репозиторий и сервис для работы с БД
         repository = SQLAlchemyRepository(db)
         database_service = DataBaseService(repository)
 
-        # Преобразуем результат в генератор пакетов
+        # 4. Создаём кеш Redis
+        storage = RedisStorage(host='localhost', port=6379, db=0)
+        cache_manager = CacheStorageManager(storage)
+
+        # 5. Преобразуем результат в пакеты
         batch_gen = SQLAlchemyRepository.batch_generator(result, batch_size=1000)
 
-        # Выполняем массовое обновление
-        database_service.bulk_update(
-            query="""
-                INSERT INTO your_table (id, recommended_ids)
-                VALUES (:id, :recommended_ids)
-                ON CONFLICT (id) DO UPDATE SET
-                    recommended_ids = EXCLUDED.recommended_ids;
-            """,
-            params=batch_gen
-        )
+        # 6. Выполняем массовое обновление
+        for batch in batch_gen:
+            # Обновление базы данных
+            database_service.bulk_update(
+                query="""
+                    INSERT INTO your_table (id, recommended_ids)
+                    VALUES (:id, :recommended_ids)
+                    ON CONFLICT (id) DO UPDATE SET
+                        recommended_ids = EXCLUDED.recommended_ids;
+                """,
+                params=batch
+            )
+
+            # Обновление кеша Redis
+            cache_manager.bulk_set(batch)
+
     except Exception as e:
         print(f"Ошибка: {e}")
+
     finally:
-        # Закрываем сессию
-        db.close()
+        db.close()  # Закрываем сессию **после завершения всех операций**

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List, Dict
 from recommendation.storage.cache.cashe_repository import StorageRepository
 
 
@@ -16,11 +16,10 @@ class CacheStorageManager:
         """
         self.storage = storage
 
-    def set(self, key: str, value: Any):
+    def bulk_set(self, data: List[Dict[str, Any]]):
         """Сохраняет значение в кеше по указанному ключу.
 
         Args:
-            key (str): Ключ для сохранения значения.
-            value (Any): Значение, которое нужно сохранить.
+
         """
-        self.storage.set(key, value)
+        self.storage.bulk_set(data)

@@ -2,7 +2,8 @@ from typing import Dict, Any, List, Generator
 import pandas
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from recommendation.storage.repository import DatabaseRepository
+
+from recommendation.storage.db.repository import DatabaseRepository
 
 
 class SQLAlchemyRepository(DatabaseRepository):
@@ -19,35 +20,25 @@ class SQLAlchemyRepository(DatabaseRepository):
         """
         self.session = session
 
-    def bulk_update(self, query: str, params: Generator[List[Dict[str, Any]], None, None]) -> Dict[str, Any] | None:
+    def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 
         Args:
             query (str): SQL-запрос.
-            params (Generator): Генератор, который возвращает данные пакетами.
+            params (List[Dict[str, Any]]): Список данных для массового обновления.
 
         Returns:
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
         try:
-            for batch in params:  # Итерируемся по пакетам данных
-                with self.session.begin():
-                    # Подготавливаем данные для вставки
-                    values = [{"id": item["id"], "recommended_ids": item["recommended_ids"]} for item in batch]
-
-                    # Выполняем SQL-запрос
-                    self.session.execute(
-                        text(query),
-                        values
-                    )
+            with self.session.begin():
+                values = [{"id": item["id"], "recommended_ids": item["recommended_ids"]} for item in params]
+                self.session.execute(text(query), values)
             return None  # Успешное выполнение
         except Exception as e:
-            self.session.rollback()  # Откатываем изменения в случае ошибки
+            self.session.rollback()
             return {"error": str(e)}
-        finally:
-            # Закрываем сессию
-            self.session.close()
 
     @staticmethod
     def batch_generator(df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:
