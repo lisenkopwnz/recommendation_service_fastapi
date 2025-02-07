@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from celery.utils.log import get_task_logger
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
 from recommendation.config import settings
@@ -9,9 +10,10 @@ from recommendation.storage.db.database_service import DataBaseService
 from recommendation.storage.db.models import SessionLocal
 from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepository
 
+logger = get_task_logger(__name__)
 
-@shared_task
-def generate_recommendation_task():
+@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3,'countdown': 10})
+def generate_recommendation_task(self):
     db: Session = SessionLocal()  # Создаём сессию
     try:
         # 1. Создаём движок и сервис для рекомендаций
@@ -49,7 +51,9 @@ def generate_recommendation_task():
             cache_manager.bulk_set(batch)
 
     except Exception as e:
-        print(f"Ошибка: {e}")
+        logger.error(f"Ошибка в таске generate_recommendation_task: {e}")  # Логируем ошибку
+        raise self.retry(exc=e)  # Перезапускаем таску
 
     finally:
         db.close()  # Закрываем сессию **после завершения всех операций**
+        
