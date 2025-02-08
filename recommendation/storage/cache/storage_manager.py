@@ -23,3 +23,17 @@ class CacheStorageManager:
 
         """
         self.storage.bulk_set(data)
+
+    def commit(self):
+        """Фиксирует все изменения, внесенные в кеш.
+
+        Вызывает метод commit у используемого хранилища, чтобы сохранить данные в постоянном состоянии.
+        """
+        return self.storage.commit()
+
+    def rollback(self):
+        """Отменяет все несохраненные изменения в кеше.
+
+        Вызывает метод rollback у используемого хранилища, чтобы вернуть кеш в предыдущее состояние.
+        """
+        return self.storage.rollback()
