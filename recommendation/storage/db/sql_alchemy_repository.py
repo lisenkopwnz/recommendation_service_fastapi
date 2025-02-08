@@ -3,7 +3,7 @@ import pandas
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from recommendation.storage.db.repository import DatabaseRepository
+from recommendation.storage.db.database_repository import DatabaseRepository
 
 
 class SQLAlchemyRepository(DatabaseRepository):
@@ -32,13 +32,22 @@ class SQLAlchemyRepository(DatabaseRepository):
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
         try:
-            with self.session.begin():
-                values = [{"id": item["id"], "recommended_ids": item["recommended_ids"]} for item in params]
-                self.session.execute(text(query), values)
-            return None  # Успешное выполнение
-        except Exception as e:
-            self.session.rollback()
-            return {"error": str(e)}
+            values = [{"id": item["id"], "recommended_ids": item["recommended_ids"]} for item in params]
+            self.session.execute(text(query), values)
+        except Exception:
+            raise
+
+    def commit(self):
+        """
+        Фиксирует транзакцию в базе данных.
+        """
+        self.session.commit()
+
+    def rollback(self):
+        """
+        Откатывает транзакцию в базе данных.
+        """
+        self.session.rollback()
 
     @staticmethod
     def batch_generator(df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:

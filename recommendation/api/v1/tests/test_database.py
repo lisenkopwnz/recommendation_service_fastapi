@@ -3,8 +3,8 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from recommendation.storage.db.database_service import DataBaseService
-from recommendation.storage.db.repository import DatabaseRepository
+from recommendation.storage.db.database_manager import DataBaseService
+from recommendation.storage.db.database_repository import DatabaseRepository
 from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepository
 
 
