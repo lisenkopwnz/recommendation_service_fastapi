@@ -1,5 +1,5 @@
 from typing import Any, List, Dict
-from recommendation.storage.cache.cashe_repository import StorageRepository
+from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
 
 class CacheStorageManager:
@@ -23,6 +23,10 @@ class CacheStorageManager:
 
         """
         self.storage.bulk_set(data)
+
+    def get(self, key: str):
+        """ Получает значение по ключу """
+        return self.storage.get(key)
 
     def commit(self):
         """Фиксирует все изменения, внесенные в кеш.

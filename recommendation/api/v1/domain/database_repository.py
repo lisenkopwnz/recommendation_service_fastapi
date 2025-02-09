@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Generator
+from typing import Any, Dict, List
 
 
 class DatabaseRepository(ABC):
@@ -19,6 +19,11 @@ class DatabaseRepository(ABC):
         Returns:
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
+        pass
+
+    @abstractmethod
+    def get(self, model: Any, primary_key: int):
+        """Ищет одну запись по первичному ключу"""
         pass
 
     @abstractmethod

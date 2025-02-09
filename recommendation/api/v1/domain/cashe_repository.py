@@ -11,6 +11,11 @@ class StorageRepository(ABC):
         pass
 
     @abstractmethod
+    def get(self, key: str):
+        """Абстрактный метод для получения записи по ключу"""
+        pass
+
+    @abstractmethod
     def commit(self):
         """Aбстрактный метод для фиксации изменений после выполнения транзакции в базе данных"""
         pass

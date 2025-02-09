@@ -1,11 +1,10 @@
 from unittest.mock import MagicMock, ANY
 import pytest
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from recommendation.storage.db.database_manager import DataBaseService
-from recommendation.storage.db.database_repository import DatabaseRepository
-from recommendation.storage.db.sql_alchemy_repository import SQLAlchemyRepository
+from recommendation.api.v1.service_layer.database_manager import DataBaseService
+from recommendation.api.v1.domain.database_repository import DatabaseRepository
+from recommendation.api.v1.adapters.database_sql_alchemy import SQLAlchemyRepository
 
 
 @pytest.fixture

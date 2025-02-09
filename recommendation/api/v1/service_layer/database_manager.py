@@ -1,6 +1,6 @@
 from typing import Dict, Any, Generator, List
 
-from recommendation.storage.db.database_repository import DatabaseRepository
+from recommendation.api.v1.domain.database_repository import DatabaseRepository
 
 
 class DataBaseService:
@@ -29,6 +29,10 @@ class DataBaseService:
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
         return self.repository.bulk_update(query, params)
+
+    def get(self, model: Any, key: Any):
+        """Получает запись"""
+        return self.repository.get(model,key)
 
     def commit(self):
         """ Выполняет фиксацию транзакции """

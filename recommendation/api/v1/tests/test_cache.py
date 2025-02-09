@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 import pytest
-from recommendation.storage.cache.storage_cache import RedisStorage
+from recommendation.api.v1.adapters.storage_cache_redis import RedisStorage
 
 
 @pytest.fixture

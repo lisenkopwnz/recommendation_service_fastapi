@@ -3,7 +3,7 @@ import pandas
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from recommendation.storage.db.database_repository import DatabaseRepository
+from recommendation.api.v1.domain.database_repository import DatabaseRepository
 
 
 class SQLAlchemyRepository(DatabaseRepository):
@@ -36,6 +36,10 @@ class SQLAlchemyRepository(DatabaseRepository):
             self.session.execute(text(query), values)
         except Exception:
             raise
+
+    def get(self,model: Any, primary_key: int):
+        """Находит запись по первичному ключу"""
+        return self.session.get(model, primary_key)
 
     def commit(self):
         """

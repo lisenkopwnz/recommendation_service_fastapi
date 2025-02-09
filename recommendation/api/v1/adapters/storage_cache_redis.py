@@ -3,7 +3,7 @@ from typing import Any, List, Dict
 
 import redis
 
-from recommendation.storage.cache.cashe_repository import StorageRepository
+from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
 class RedisStorage(StorageRepository):
     """ Низкоуровневый класс, который реализует кеширование с помощью Redis """
@@ -21,7 +21,7 @@ class RedisStorage(StorageRepository):
         """Метод для массового сохранения данных в Redis."""
         with self.new_client.pipeline() as pipe_new, self.old_client.pipeline() as pipe_old:
             for item in data:
-                key = str(item["id"])
+                key = f'videos_id:{str(item["id"])}'
                 value = json.dumps(item["recommended_ids"])
 
                 old_value = self.new_client.get(key)
@@ -31,6 +31,10 @@ class RedisStorage(StorageRepository):
                 pipe_new.set(key, value)
                 pipe_new.execute()
                 pipe_old.execute()
+
+    def get(self, key: str):
+        """ Получаем значение по ключу """
+        return self.new_client.get(f'videos_id:{key}')
 
     def commit(self):
         """ Подтверждаем изменения, очищая всё старое хранилище Redis. """
