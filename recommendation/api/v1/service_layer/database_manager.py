@@ -41,3 +41,7 @@ class DataBaseService:
     async def rollback(self):
         """ Выполняет откат транзакции """
         return await self.repository.rollback()
+
+    async def close(self):
+        """ Выполняет закрытие соеденения """
+        return await self.repository.close()

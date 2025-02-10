@@ -47,3 +47,10 @@ class DatabaseRepository(ABC):
         отмены выполненных операций.
         """
         pass
+
+    @abstractmethod
+    async def close(self):
+        """
+        Закрывает соеденение с базой данных выступающей в роли хранилища данных
+        """
+        pass

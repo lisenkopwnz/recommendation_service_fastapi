@@ -1,4 +1,4 @@
-class UnionOfWork:
+class AsyncUnitOfWork:
     """
     Контекстный менеджер для работы с базой данных и кешем через высокоуровневые сервисы.
 
@@ -44,8 +44,10 @@ class UnionOfWork:
         """
         if exc_type:
             await self.rollback()
+            await self.close()
         else:
             await self.commit()
+            await self.close()
 
     async def commit(self):
         """
@@ -60,3 +62,8 @@ class UnionOfWork:
         """
         await self.db_service.rollback()
         await self.cache_service.rollback()
+
+    async def close(self):
+        """ Закрывает соеденение в базе данных и кеше."""
+        await self.db_service.close()
+        await self.cache_service.close()

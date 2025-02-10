@@ -54,6 +54,12 @@ class SQLAlchemyRepository(DatabaseRepository):
         """
         await self.session.rollback()
 
+    async def close(self):
+        """
+        Закрываем асинхронную сессию
+        """
+        await self.session.close()
+
     @staticmethod
     def batch_generator(df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:
         """

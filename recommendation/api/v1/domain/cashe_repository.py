@@ -24,3 +24,8 @@ class StorageRepository(ABC):
     async def rollback(self):
         """Aбстрактный метод для отката изменений в случае ошибки в базе данных"""
         pass
+
+    @abstractmethod
+    async def close(self):
+        """Aбстрактный метод для закрытия соеденения с кешированием"""
+        pass

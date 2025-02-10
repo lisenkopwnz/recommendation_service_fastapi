@@ -2,7 +2,6 @@ import json
 from typing import Any, List, Dict
 
 import aioredis
-import redis
 
 from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
@@ -22,7 +21,7 @@ class AsyncRedisStorage(StorageRepository):
 
     async def _get_client(self, db: int):
         # Новый способ создания подключения через Redis класс
-        redis = aioredis.from_url(f"redis://{self.host}:{self.port}/{db}", encoding="utf-8", decode_responses=True)
+        redis = aioredis.from_url(f"redis://{self.host}:{self.port}/{db}", encoding="utf-8", decode_responses=True,max_connections=100)
         return redis
 
     async def bulk_set(self, data: List[Dict[str, Any]]):
@@ -70,3 +69,7 @@ class AsyncRedisStorage(StorageRepository):
 
             await pipe_new.execute()
             await pipe_old.execute()
+
+    async def close(self):
+        """ Метод не реализовывает логики так как пул соеденений Redis автомвтически закрывает соедения"""
+        pass

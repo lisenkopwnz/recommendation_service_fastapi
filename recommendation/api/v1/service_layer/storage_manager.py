@@ -1,7 +1,5 @@
 from typing import Any, List, Dict
 
-from sqlalchemy.util import await_only
-
 from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
 
@@ -44,3 +42,11 @@ class CacheStorageManager:
         Вызывает метод rollback у используемого хранилища, чтобы вернуть кеш в предыдущее состояние.
         """
         return await self.storage.rollback()
+
+    async def close(self):
+        """
+        Закрывает соеденение в кеше.
+
+        Вызывает метод close у используемого хранилища, чтобы закрыть соеденение кеша.
+        """
+        await self.storage.close()
