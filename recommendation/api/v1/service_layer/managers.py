@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from recommendation.api.v1.adapters.database_sql_alchemy import SQLAlchemyRepository
 from recommendation.api.v1.adapters.storage_cache_redis import RedisStorage
@@ -6,7 +6,7 @@ from recommendation.api.v1.service_layer.database_manager import DataBaseService
 from recommendation.api.v1.service_layer.storage_manager import CacheStorageManager
 
 
-def create_database_manager(db: Session):
+def create_database_manager(db: AsyncSession):
     """Функция создания сервиса и низкоуровневой реализации для работы с базой данных."""
     repository = SQLAlchemyRepository(db)
     database_service = DataBaseService(repository)

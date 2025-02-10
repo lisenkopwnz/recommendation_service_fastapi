@@ -1,6 +1,7 @@
 from typing import Dict, Any, List, Generator
 import pandas
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from recommendation.api.v1.domain.database_repository import DatabaseRepository
@@ -8,19 +9,19 @@ from recommendation.api.v1.domain.database_repository import DatabaseRepository
 
 class SQLAlchemyRepository(DatabaseRepository):
     """
-    Реализация репозитория для работы с базой данных через SQLAlchemy.
+    Реализация репозитория для работы с базой данных через SQLAlchemy (асинхронно).
     """
 
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         """
         Инициализирует репозиторий.
 
         Args:
-            session (Session): Сессия SQLAlchemy.
+            session (AsyncSession): Асинхронная сессия SQLAlchemy.
         """
         self.session = session
 
-    def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
+    async def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 
@@ -33,25 +34,25 @@ class SQLAlchemyRepository(DatabaseRepository):
         """
         try:
             values = [{"id": item["id"], "recommended_ids": item["recommended_ids"]} for item in params]
-            self.session.execute(text(query), values)
+            await self.session.execute(text(query), values)
         except Exception:
             raise
 
-    def get(self,model: Any, primary_key: int):
+    async def get(self,model: Any, primary_key: int):
         """Находит запись по первичному ключу"""
-        return self.session.get(model, primary_key)
+        return await self.session.get(model, primary_key)
 
-    def commit(self):
+    async def commit(self):
         """
         Фиксирует транзакцию в базе данных.
         """
-        self.session.commit()
+        await self.session.commit()
 
-    def rollback(self):
+    async def rollback(self):
         """
         Откатывает транзакцию в базе данных.
         """
-        self.session.rollback()
+        await self.session.rollback()
 
     @staticmethod
     def batch_generator(df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:

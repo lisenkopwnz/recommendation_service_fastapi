@@ -21,18 +21,18 @@ class UnionOfWork:
         self.db_service = db_service
         self.cache_service = cache_service
 
-    def __enter__(self):
+    async def __aenter__(self):
         """
-        Вход в контекстный менеджер.
+        Вход в асинхронный контекстный менеджер.
 
         Возвращает:
             self: Объект UnionOfWork.
         """
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         """
-        Выход из контекстного менеджера.
+        Выход из асинхронного контекстного менеджера.
 
         Если в блоке контекста возникло исключение, выполняется откат (rollback)
         изменений в базе данных и кеше. В противном случае изменения фиксируются (commit).
@@ -43,20 +43,20 @@ class UnionOfWork:
             exc_tb: Трассировка стека исключения (если возникло).
         """
         if exc_type:
-            self.rollback()
+            await self.rollback()
         else:
-            self.commit()
+            await self.commit()
 
-    def commit(self):
+    async def commit(self):
         """
         Фиксирует изменения в базе данных и кеше.
         """
-        self.db_service.commit()
-        self.cache_service.commit()
+        await self.db_service.commit()
+        await self.cache_service.commit()
 
-    def rollback(self):
+    async def rollback(self):
         """
         Откатывает изменения в базе данных и кеше.
         """
-        self.db_service.rollback()
-        self.cache_service.rollback()
+        await self.db_service.rollback()
+        await self.cache_service.rollback()

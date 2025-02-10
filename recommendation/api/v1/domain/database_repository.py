@@ -8,7 +8,7 @@ class DatabaseRepository(ABC):
     """
 
     @abstractmethod
-    def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
+    async def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 
@@ -22,12 +22,12 @@ class DatabaseRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, model: Any, primary_key: int):
+    async def get(self, model: Any, primary_key: int):
         """Ищет одну запись по первичному ключу"""
         pass
 
     @abstractmethod
-    def commit(self):
+    async def commit(self):
         """
         Фиксирует (подтверждает) транзакцию.
 
@@ -38,7 +38,7 @@ class DatabaseRepository(ABC):
         pass
 
     @abstractmethod
-    def rollback(self):
+    async def rollback(self):
         """
         Отменяет (откатывает) транзакцию.
 

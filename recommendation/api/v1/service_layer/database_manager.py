@@ -1,4 +1,4 @@
-from typing import Dict, Any, Generator, List
+from typing import Dict, Any, List
 
 from recommendation.api.v1.domain.database_repository import DatabaseRepository
 
@@ -17,27 +17,27 @@ class DataBaseService:
         """
         self.repository = repository
 
-    def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
+    async def bulk_update(self, query: str, params: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         """
         Выполняет массовое обновление данных.
 
         Args:
             query (str): SQL-запрос.
-            params (Generator): Генератор, который возвращает данные пакетами.
+            params (List[Dict[str, Any]]): Список данных для массового обновления.
 
         Returns:
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
-        return self.repository.bulk_update(query, params)
+        return await self.repository.bulk_update(query, params)
 
-    def get(self, model: Any, key: Any):
-        """Получает запись"""
-        return self.repository.get(model,key)
+    async def get(self, model: Any, key: Any):
+        """Получает запись по ключу"""
+        return await self.repository.get(model, key)
 
-    def commit(self):
+    async def commit(self):
         """ Выполняет фиксацию транзакции """
-        return self.repository.commit()
+        return await self.repository.commit()
 
-    def rollback(self):
+    async def rollback(self):
         """ Выполняет откат транзакции """
-        return self.repository.rollback()
+        return await self.repository.rollback()

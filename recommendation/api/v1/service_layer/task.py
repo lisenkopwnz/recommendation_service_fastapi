@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from celery.utils.log import get_task_logger
+
+from recommendation.api.v1.adapters.dependencies import get_db
 from recommendation.api.v1.common.unit_of_work import UnionOfWork
 from recommendation.api.v1.service_layer.managers import create_database_manager, create_cache_manager
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
@@ -24,7 +26,7 @@ def generate_recommendation_task(self):
     5. Обновляет базу данных и кеш Redis с помощью UnitOfWork.
     """
     # Создаем сессию для работы с базой данных
-    db: Session = SessionLocal()
+    db = await get_db()
 
     try:
         # 1. Создаём движок и сервис для рекомендаций

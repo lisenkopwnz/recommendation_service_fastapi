@@ -6,7 +6,6 @@ from recommendation.api.v1.adapters.models import SessionLocal, SimilarContentRe
 
 
 def get_similar_videos(id: int):
-    db: Session = SessionLocal()
     database_service = create_database_manager(db)
 
     cache_manager = create_cache_manager(host='localhost', port=6379, new_db=0, old_db=1)

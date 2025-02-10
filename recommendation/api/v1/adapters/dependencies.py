@@ -1,15 +1,9 @@
-from recommendation.api.v1.adapters.models import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from recommendation.api.v1.adapters.models import engine
 
 
-def get_db():
-    """
-    Генератор для получения сессии базы данных.
-
-    Эта функция создает и возвращает сессию базы данных с помощью `SessionLocal`.
-    После завершения работы с сессией, она автоматически закрывается, даже если в процессе возникли исключения.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    # Создаем сессию вручную через AsyncSession
+    async with AsyncSession(engine) as session:
+        yield session  # Генератор передает сессию для использования
