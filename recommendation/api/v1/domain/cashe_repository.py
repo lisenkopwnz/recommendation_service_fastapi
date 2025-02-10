@@ -6,21 +6,21 @@ class StorageRepository(ABC):
     """Абстрактный класс ,который описывает интерфейс для работы с инструментами кеширования."""
 
     @abstractmethod
-    def bulk_set(self, data: List[Dict[str, Any]]):
+    async def bulk_set(self, data: List[Dict[str, Any]]):
         """Абстрактный метод ,который описывает массовое добавление строкового значения по ключу."""
         pass
 
     @abstractmethod
-    def get(self, key: str):
+    async def get(self, key: str):
         """Абстрактный метод для получения записи по ключу"""
         pass
 
     @abstractmethod
-    def commit(self):
+    async def commit(self):
         """Aбстрактный метод для фиксации изменений после выполнения транзакции в базе данных"""
         pass
 
     @abstractmethod
-    def rollback(self):
+    async def rollback(self):
         """Aбстрактный метод для отката изменений в случае ошибки в базе данных"""
         pass

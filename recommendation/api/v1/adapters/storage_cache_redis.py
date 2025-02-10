@@ -1,12 +1,13 @@
 import json
 from typing import Any, List, Dict
 
+import aioredis
 import redis
 
 from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
-class RedisStorage(StorageRepository):
-    """ Низкоуровневый класс, который реализует кеширование с помощью Redis """
+class AsyncRedisStorage(StorageRepository):
+    """Низкоуровневый класс, который реализует кеширование с помощью Redis в асинхронном режиме"""
 
     def __init__(self, host: str = 'localhost', port: int = 6379, new_db: int = 0, old_db: int = 1):
         """
@@ -14,41 +15,58 @@ class RedisStorage(StorageRepository):
         :param port: Номер порта на котором будет работать redis сервер
         :param db: Номер базы данных в диапазоне от 0 до 15 (включительно)
         """
-        self.new_client = redis.Redis(host=host, port=port, db=new_db)
-        self.old_client = redis.Redis(host=host, port=port, db=old_db)
+        self.host = host
+        self.port = port
+        self.new_db = new_db
+        self.old_db = old_db
 
-    def bulk_set(self, data: List[Dict[str, Any]]):
+    async def _get_client(self, db: int):
+        # Новый способ создания подключения через Redis класс
+        redis = aioredis.from_url(f"redis://{self.host}:{self.port}/{db}", encoding="utf-8", decode_responses=True)
+        return redis
+
+    async def bulk_set(self, data: List[Dict[str, Any]]):
         """Метод для массового сохранения данных в Redis."""
-        with self.new_client.pipeline() as pipe_new, self.old_client.pipeline() as pipe_old:
+        new_client = await self._get_client(self.new_db)
+        old_client = await self._get_client(self.old_db)
+
+        async with new_client.pipeline() as pipe_new, old_client.pipeline() as pipe_old:
             for item in data:
                 key = f'videos_id:{str(item["id"])}'
                 value = json.dumps(item["recommended_ids"])
 
-                old_value = self.new_client.get(key)
+                old_value = await new_client.get(key)
                 if old_value:
-                   pipe_old.set(key, old_value)
+                    await pipe_old.set(key, old_value)
 
-                pipe_new.set(key, value)
-                pipe_new.execute()
-                pipe_old.execute()
+                await pipe_new.set(key, value)
 
-    def get(self, key: str):
-        """ Получаем значение по ключу """
-        return self.new_client.get(f'videos_id:{key}')
+            await pipe_new.execute()
+            await pipe_old.execute()
 
-    def commit(self):
-        """ Подтверждаем изменения, очищая всё старое хранилище Redis. """
-        self.old_client.flushdb()
+    async def get(self, key: str):
+        """Получаем значение по ключу"""
+        new_client = await self._get_client(self.new_db)
+        value = await new_client.get(f'videos_id:{key}')
+        return value
 
-    def rollback(self):
-        """ Откатываем изменения, восстанавливая данные из старого хранилища. """
-        with self.new_client.pipeline() as pipe_new, self.old_client.pipeline() as pipe_old:
-            for key in self.old_client.keys():  # Получаем все ключи из старого хранилища
-                old_value = self.old_client.get(key)
+    async def commit(self):
+        """Подтверждаем изменения, очищая всё старое хранилище Redis."""
+        old_client = await self._get_client(self.old_db)
+        await old_client.flushdb()
+
+    async def rollback(self):
+        """Откатываем изменения, восстанавливая данные из старого хранилища."""
+        new_client = await self._get_client(self.new_db)
+        old_client = await self._get_client(self.old_db)
+
+        async with new_client.pipeline() as pipe_new, old_client.pipeline() as pipe_old:
+            keys = await old_client.keys()
+            for key in keys:
+                old_value = await old_client.get(key)
                 if old_value:
-                    pipe_new.set(key, old_value)  # Восстанавливаем старые данные
-                pipe_old.delete(key)  # Удаляем восстановленные данные
+                    await pipe_new.set(key, old_value)  # Восстанавливаем старые данные
+                await pipe_old.delete(key)  # Удаляем восстановленные данные
 
-            # Выполняем откат
-            pipe_new.execute()
-            pipe_old.execute()
+            await pipe_new.execute()
+            await pipe_old.execute()
