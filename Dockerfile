@@ -8,7 +8,7 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_ROOT_USER_ACTION=ignore
 
 # Установка рабочей директории
-WORKDIR /cafe_order_system
+WORKDIR /recommendation_system
 
 # Настройка временной зоны UTC
 RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && \

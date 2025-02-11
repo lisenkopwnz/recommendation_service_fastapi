@@ -2,11 +2,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from recommendation.api.v1.task.worker import make_celery
+
 
 app = FastAPI()
 
-celery = make_celery()
+
 
 @asynccontextmanager
 async def lifespan():
@@ -19,4 +19,4 @@ async def lifespan():
     После завершения работы приложения (после `yield`), выполняется код для освобождения ресурсов.
     """
     yield
-    engine.dispose()
+
