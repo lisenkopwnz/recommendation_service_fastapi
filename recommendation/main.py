@@ -2,9 +2,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from recommendation.storage.models import engine
+from recommendation.api.v1.task.worker import make_celery
 
 app = FastAPI()
+
+celery = make_celery()
 
 @asynccontextmanager
 async def lifespan():

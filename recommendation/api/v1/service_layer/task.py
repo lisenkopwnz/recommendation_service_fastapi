@@ -1,4 +1,3 @@
-from celery import shared_task
 from celery.utils.log import get_task_logger
 import asyncio
 
@@ -8,7 +7,7 @@ from recommendation.api.v1.service_layer.managers import create_async_database_m
 from recommendation.config import settings
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
-
+from recommendation.main import celery
 
 logger = get_task_logger(__name__)
 
@@ -44,7 +43,7 @@ async def async_save_to_db_and_cache(result):
         logger.error(f"Ошибка при сохранении данных в БД и кэш: {e}")
         raise
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 10})
+@celery.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 10})
 def generate_recommendation_task(self):
     """
     Синхронная Celery-таска:
