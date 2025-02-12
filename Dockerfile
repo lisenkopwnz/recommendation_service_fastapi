@@ -1,4 +1,4 @@
-# Оф. образ Python
+# Используем официальный образ Python 3.12
 FROM python:3.12-slim-bullseye
 
 # Переменные окружения для Python
@@ -14,34 +14,37 @@ WORKDIR /recommendation_system
 RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && \
     echo "UTC" > /etc/timezone
 
-# Системные зависимости (для сборки и PostgreSQL клиента)
+# Установка системных зависимостей
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     postgresql-client \
-    netcat && \
+    netcat \
+    python3-dev \
+    libffi-dev \
+    libssl-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Копирую файл с зависимостями (requirements.txt) в контейнер
+# Копируем файл с зависимостями
 COPY requirements.txt .
 
-# Установка Python-зависимостей
-RUN pip install --no-cache-dir -r requirements.txt
+# Удаляем кеш PIP и устанавливаем зависимости
+RUN pip cache purge && pip install --no-cache-dir -r requirements.txt
 
-# Все файлы проекта копируются в контейнер
+# Копируем все файлы проекта в контейнер
 COPY . .
 
-# Исполняемый скрипт entrypoint.sh
+# Копируем исполняемый скрипт entrypoint.sh
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Порт для FastAPI
+# Открываем порт для FastAPI
 EXPOSE 8000
 
-# Устанавливаю entrypoint для запуска сервера uvicorn
+# Устанавливаем entrypoint для запуска сервера
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# Команда для запуска uvicorn-сервера
+# Запускаем сервер uvicorn
 CMD ["uvicorn", "recommendation.main:app", "--host", "0.0.0.0", "--port", "8000"]

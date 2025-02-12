@@ -1,3 +1,5 @@
+import os
+
 import orjson
 
 from recommendation.api.v1.adapters.dependencies import get_db
@@ -10,7 +12,7 @@ async def get_similar_videos(id: int):
     db = await get_db()
     database_service = await create_async_database_manager(db)
 
-    cache_manager = await create_async_cache_manager(host='localhost', port=6379, new_db=0, old_db=1)
+    cache_manager = await create_async_cache_manager(host = os.getenv('REDIS_HOST'), port = os.getenv('REDIS_PORT'), new_db = 0, old_db = 1)
 
     # Сначала пытаемся получить данные из кэша
     if arr_videos := await cache_manager.get(f'videos_id:{str(id)}'):

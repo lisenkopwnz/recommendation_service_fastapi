@@ -4,11 +4,11 @@ from sqlalchemy import Column, Integer, ARRAY, TIMESTAMP, func
 import os
 
 # Подключение к базе данных через асинхронный драйвер
-POSTGRES_USER = os.getenv("POSTGRES_USER", "myuser")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "mypassword")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "storage")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "mydatabase")
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
 
 SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 

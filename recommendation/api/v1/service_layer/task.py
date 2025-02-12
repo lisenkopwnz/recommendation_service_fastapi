@@ -1,13 +1,15 @@
+import os
+
 from celery.utils.log import get_task_logger
 import asyncio
 
 from recommendation.api.v1.adapters.dependencies import get_db
 from recommendation.api.v1.common.unit_of_work import AsyncUnitOfWork
 from recommendation.api.v1.service_layer.managers import create_async_database_manager, create_async_cache_manager
+from recommendation.api.v1.task.worker import celery
 from recommendation.config import settings
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
-from recommendation.main import celery
 
 logger = get_task_logger(__name__)
 
@@ -19,7 +21,7 @@ async def async_save_to_db_and_cache(result):
     try:
         # Создаем асинхронные клиенты для БД и кеша
         database_service = await create_async_database_manager(db)
-        cache_manager = await create_async_cache_manager(host = 'localhost', port = 6379, new_db = 0, old_db = 1)
+        cache_manager = await create_async_cache_manager(host = os.getenv('REDIS_HOST'), port = os.getenv('REDIS_PORT'), new_db = 0, old_db = 1)
 
         # Оборачиваем в UnitOfWork
         async with AsyncUnitOfWork(database_service, cache_manager) as uow:
