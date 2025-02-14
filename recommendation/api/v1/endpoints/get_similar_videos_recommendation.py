@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from recommendation.api.v1.service_layer.get_similar_recommendation import get_similar_videos
+from recommendation.api.v1.service_layer.get_recommendation import get_similar_videos
 
 router = APIRouter(prefix="/api/v1/recommendation")
 

@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from recommendation.api.v1.adapters.database_sql_alchemy import SQLAlchemyRepository
 from recommendation.api.v1.adapters.storage_cache_redis import AsyncRedisStorage
-from recommendation.api.v1.service_layer.database_manager import DataBaseService
-from recommendation.api.v1.service_layer.storage_manager import CacheStorageManager
+from recommendation.api.v1.service_layer.manager_database import DataBaseService
+from recommendation.api.v1.service_layer.manager_storage import CacheStorageManager
 
 
 async def create_async_database_manager(db: AsyncSession):

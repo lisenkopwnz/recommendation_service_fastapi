@@ -1,5 +1,5 @@
 from recommendation.api.v1.adapters.storage_cache_redis import AsyncRedisStorage
-from recommendation.api.v1.service_layer.database_manager import DataBaseService
+from recommendation.api.v1.service_layer.manager_database import DataBaseService
 
 
 class AsyncUnitOfWork:
