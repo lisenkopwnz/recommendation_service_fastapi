@@ -9,7 +9,14 @@ from recommendation.api.v1.domain.cashe_repository import StorageRepository
 class AsyncRedisStorage(StorageRepository):
     """Асинхронное кеш-хранилище Redis, использующее базу 1 только при обновлении данных."""
 
-    def __init__(self, host: str = "172.17.0.1", port: int = 6379, new_db: int = 0, old_db: int = 1, max_connections: int = 100):
+    def __init__(
+            self,
+            host: str = "172.17.0.1",
+            port: int = 6379,
+            new_db: int = 0,
+            old_db: int = 1,
+            max_connections: int = 100
+    ):
         """
         :param host: Хост Redis
         :param port: Порт Redis
@@ -88,4 +95,4 @@ class AsyncRedisStorage(StorageRepository):
         """Закрывает соединения с Redis."""
         await self.new_client.aclose()
         if self.old_client:
-            await self.old_client.aclose()  # Закрываем только если old_client был создан
+            await self.old_client.aclose()

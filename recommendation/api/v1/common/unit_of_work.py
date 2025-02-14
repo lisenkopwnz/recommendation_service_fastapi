@@ -1,3 +1,7 @@
+from recommendation.api.v1.adapters.storage_cache_redis import AsyncRedisStorage
+from recommendation.api.v1.service_layer.database_manager import DataBaseService
+
+
 class AsyncUnitOfWork:
     """
     Контекстный менеджер для работы с базой данных и кешем через высокоуровневые сервисы.
@@ -10,7 +14,7 @@ class AsyncUnitOfWork:
         cache_service: Объект сервиса работы с кешем.
     """
 
-    def __init__(self, db_service, cache_service):
+    def __init__(self, db_service: DataBaseService = None, cache_service: AsyncRedisStorage = None):
         """
         Инициализирует контекстный менеджер.
 
@@ -53,17 +57,25 @@ class AsyncUnitOfWork:
         """
         Фиксирует изменения в базе данных и кеше.
         """
-        await self.db_service.commit()
-        await self.cache_service.commit()
+        if self.db_service:
+            await self.db_service.commit()
+        if self.cache_service:
+            await self.cache_service.commit()
 
     async def rollback(self):
         """
         Откатывает изменения в базе данных и кеше.
         """
-        await self.db_service.rollback()
-        await self.cache_service.rollback()
+        if self.db_service:
+            await self.db_service.rollback()
+        if self.cache_service:
+            await self.cache_service.rollback()
 
     async def close(self):
-        """ Закрывает соеденение в базе данных и кеше."""
-        await self.db_service.close()
-        await self.cache_service.close()
+        """
+        Закрывает соеденение в базе данных и кеше.
+        """
+        if self.db_service:
+            await self.db_service.close()
+        if self.cache_service:
+            await self.cache_service.close()
