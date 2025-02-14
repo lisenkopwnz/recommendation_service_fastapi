@@ -1,5 +1,5 @@
 # Используем официальный образ Python 3.12
-FROM python:3.12-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 # Переменные окружения для Python
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -47,4 +47,4 @@ EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Запускаем сервер uvicorn
-CMD ["uvicorn", "recommendation.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

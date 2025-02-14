@@ -1,14 +1,8 @@
-import asyncio
-from concurrent.futures.thread import ThreadPoolExecutor
-
-from fastapi import Query
-from sqlalchemy.util import await_only
-
+from fastapi import APIRouter, Query
 from recommendation.api.v1.service_layer.get_similar_recommendation import get_similar_videos
-from recommendation.main import app
 
+router = APIRouter(prefix="/api/v1/recommendation")
 
-@app.get("/get_recommendation/")
+@router.get("/get_recommendation/")
 async def get_recommendation(id: int = Query(..., ge=0)):
-    """ Эндпоинт для получения списка рекомендаций из кэша (при наличии) или базы данных """
     return await get_similar_videos(id)

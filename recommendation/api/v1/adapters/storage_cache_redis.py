@@ -1,14 +1,14 @@
 import json
 from typing import Any, List, Dict
 
-import aioredis
+import redis.asyncio as redis
 
 from recommendation.api.v1.domain.cashe_repository import StorageRepository
 
 class AsyncRedisStorage(StorageRepository):
     """Низкоуровневый класс, который реализует кеширование с помощью Redis в асинхронном режиме"""
 
-    def __init__(self, host: str = 'localhost', port: int = 6379, new_db: int = 0, old_db: int = 1):
+    def __init__(self, host: str = '172.17.0.1', port: int = 6379, new_db: int = 0, old_db: int = 1):
         """
         :param host: Имя хоста на котором будет работать redis сервер
         :param port: Номер порта на котором будет работать redis сервер
@@ -21,8 +21,8 @@ class AsyncRedisStorage(StorageRepository):
 
     async def _get_client(self, db: int):
         # Новый способ создания подключения через Redis класс
-        redis = aioredis.from_url(f"redis://{self.host}:{self.port}/{db}", encoding="utf-8", decode_responses=True,max_connections=100)
-        return redis
+        redis_client = redis.Redis.from_url(f"redis://{self.host}:{self.port}/{db}", encoding="utf-8", decode_responses=True,max_connections=100)
+        return redis_client
 
     async def bulk_set(self, data: List[Dict[str, Any]]):
         """Метод для массового сохранения данных в Redis."""
