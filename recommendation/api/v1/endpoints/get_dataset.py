@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse
 from recommendation.config import settings
 
 # Создаем новый роутер с префиксом "/api/v1/upload_file"
-router = APIRouter(prefix="/api/v1/upload_file")
+router = APIRouter(prefix="/api/v1/file")
 
 
 @router.post("/upload_dataset/")
