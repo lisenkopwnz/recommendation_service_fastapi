@@ -1,8 +1,12 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError, HTTPException
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from recommendation.api.v1.endpoints.get_dataset import router as file_router
-from recommendation.api.v1.endpoints.get_similar_videos_recommendation import router as recommendation_router
+from recommendation.api.v1.endpoints.get_videos_recommendation import router as recommendation_router
 from recommendation.api.v1.service_layer.event_bus import EventBus
 from recommendation.api.v1.service_layer.event_handlers import generate_recommendations_handler, save_file_handler
 
@@ -41,6 +45,30 @@ async def lifespan(app: FastAPI):
 
 # Инициализация приложения FastAPI с управлением жизненным циклом через контекстный менеджер
 app = FastAPI(lifespan=lifespan)
+
+# Глобальный обработчик ошибок валидации
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code = 400,
+        content={"message": "Ошибка валидации данных", "errors": exc.errors()}
+    )
+
+# Глобальный обработчик HTTPException
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail, "path": request.url.path}
+    )
+
+# Глобальный обработчик для всех остальных исключений (например, ValueError)
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"Произошла непредвиденная ошибка": str(exc), "path": request.url.path}
+    )
 
 # Подключение маршрутов для обработки запросов на рекомендации и загрузку файлов
 app.include_router(recommendation_router)
