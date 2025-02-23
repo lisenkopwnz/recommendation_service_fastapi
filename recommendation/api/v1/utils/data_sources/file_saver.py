@@ -3,9 +3,7 @@ import aiofiles
 from fastapi import UploadFile
 
 from recommendation.api.v1.utils.data_sources.interface import DataSourceABC
-from recommendation.logging_config import setup_logger
 
-logger = setup_logger()
 
 class FileHandlerCSV(DataSourceABC):
     """
@@ -31,7 +29,6 @@ class FileHandlerCSV(DataSourceABC):
         try:
             os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
         except OSError as e:
-            logger.error(f"Ошибка при сохранении файла: {e}")
             raise RuntimeError(f"Не удалось создать директорию: {e}")
 
     async def save_file(self) -> None:
@@ -46,5 +43,4 @@ class FileHandlerCSV(DataSourceABC):
                 while chunk := await self.file.read(1024 * 1024):
                     await buffer.write(chunk)
         except Exception as e:
-            logger.error(f"Ошибка при сохранении файла: {e}")
             raise RuntimeError(f"Ошибка при сохранении файла: {e}")

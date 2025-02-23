@@ -17,12 +17,13 @@ services:
       db:
         condition: service_healthy
     networks:
-      - backend
+      - shared_backend  # Указываем общую сеть
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "8000"]
       interval: 10s
       timeout: 5s
       retries: 5
+    ipc: host
 
   db:
     image: postgres:16-alpine
@@ -36,28 +37,16 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - backend
+      - shared_backend  # Указываем общую сеть
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  celery_worker:
-    build: .
-    container_name: celery_worker
-    command: [ "celery", "-A", "recommendation.api.v1.task.worker.celery", "worker", "--loglevel=info" ]
-    env_file:
-      - .env
-    depends_on:
-      web:
-        condition: service_healthy
-    networks:
-      - backend
-
 volumes:
   postgres_data:
 
 networks:
-  backend:
-    driver: bridge
+  shared_backend:
+    external: true

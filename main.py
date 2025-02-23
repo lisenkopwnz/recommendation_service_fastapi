@@ -1,3 +1,5 @@
+import logging
+import multiprocessing
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -5,11 +7,13 @@ from fastapi.exceptions import RequestValidationError, HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from recommendation.api.v1.endpoints.get_dataset import router as file_router
+from recommendation.api.v1.adapters.models import init_db
+from recommendation.api.v1.endpoints.load_csv_file import router as file_router
 from recommendation.api.v1.endpoints.get_videos_recommendation import router as recommendation_router
 from recommendation.api.v1.service_layer.event_bus import EventBus
 from recommendation.api.v1.service_layer.event_handlers import generate_recommendations_handler, save_file_handler
 
+logging.basicConfig(level=logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,6 +34,7 @@ async def lifespan(app: FastAPI):
         2. Подписать обработчики на соответствующие события.
         3. После выполнения задач на выходе шина событий и подписчики очищаются.
     """
+    await init_db()
     # Создание и настройка шины событий
     app.state.event_bus = EventBus()
     # Подписка обработчиков на события

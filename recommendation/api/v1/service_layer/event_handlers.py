@@ -1,4 +1,7 @@
-from recommendation.api.v1.service_layer.task import generate_recommendation_task
+import multiprocessing
+import signal
+
+from recommendation.api.v1.service_layer.task import generate_recommendation_task, error_handler
 from recommendation.api.v1.utils.data_sources.factory_saver import FileSaverFactory
 
 
@@ -13,7 +16,10 @@ async def generate_recommendations_handler():
     Задача выполняется асинхронно, и обработчик не блокирует выполнение других операций
     приложения.
     """
-    generate_recommendation_task.delay()  # Вызываем Celery задачу для генерации рекомендаций
+    signal.signal(signal.SIGUSR1, error_handler)
+    process = multiprocessing.Process(target=generate_recommendation_task)
+    process.daemon = True
+    process.start()
 
 async def save_file_handler(file, file_path):
     """

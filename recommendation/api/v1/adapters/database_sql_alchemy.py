@@ -60,8 +60,8 @@ class SQLAlchemyRepository(DatabaseRepository):
         """
         await self.session.close()
 
-    @staticmethod
-    def batch_generator(df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:
+
+    def batch_generator(self,df: pandas.DataFrame, batch_size: int = 1000) -> Generator[List[Dict[str, Any]], None, None]:
         """
         Генератор, который возвращает данные из DataFrame пакетами.
 

@@ -3,9 +3,9 @@ from unittest.mock import patch, AsyncMock
 from fastapi import UploadFile
 from io import BytesIO
 from recommendation.api.v1.utils.data_sources.file_saver import FileHandlerCSV
-from recommendation.logging_config import setup_logger
 
-logger = setup_logger()
+
+
 
 @pytest.mark.asyncio
 async def test_ensure_directory_exists():

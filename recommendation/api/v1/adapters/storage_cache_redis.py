@@ -1,6 +1,7 @@
 import json
 from typing import Any, List, Dict
 
+import numpy as np
 import redis.asyncio as redis
 
 from recommendation.api.v1.domain.cashe_repository import StorageRepository
@@ -53,7 +54,11 @@ class AsyncRedisStorage(StorageRepository):
         async with self.new_client.pipeline() as pipe_new, old_client.pipeline() as pipe_old:
             for item in data:
                 key = f'videos_id:{item["id"]}'
-                value = json.dumps(item["recommended_ids"])
+                recommended_ids = [
+                    int(i) if isinstance(i, (np.int64, np.int32)) else i
+                    for i in item["recommended_ids"]
+                ]
+                value = json.dumps(recommended_ids)
 
                 # Копируем старое значение в old_db перед обновлением
                 old_value = await self.new_client.get(key)
@@ -67,8 +72,7 @@ class AsyncRedisStorage(StorageRepository):
             await pipe_old.execute()
 
     async def get(self, key: str) -> Any:
-        """Получаем значение из базы 0."""
-        return await self.new_client.get(f'videos_id:{key}')
+        return await self.new_client.get(key)
 
     async def commit(self):
         """Удаляет данные из базы 1 (подтверждает изменения в базе 0)."""

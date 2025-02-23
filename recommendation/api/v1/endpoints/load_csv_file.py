@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/v1/file")
 
 
 @router.post("/upload_dataset/")
-async def upload_dataset(request: Request, file: UploadFile = File(...)):
+async def load_dataset(request: Request, file: UploadFile = File(...)):
     """
     Эндпоинт для загрузки датасета и инициирования процесса генерации рекомендаций.
 

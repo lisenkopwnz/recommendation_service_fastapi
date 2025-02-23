@@ -1,4 +1,6 @@
 import os
+import signal
+import traceback
 
 from celery.utils.log import get_task_logger
 import asyncio
@@ -11,7 +13,6 @@ from recommendation.config import settings
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_engine import RecommendationEnginePandas
 from recommendation.api.v1.utils.similarity_recommendation.recommendation_service import RecommendationService
 
-logger = get_task_logger(__name__)
 
 async def async_save_to_db_and_cache(result):
     """
@@ -19,9 +20,13 @@ async def async_save_to_db_and_cache(result):
     """
     db = await get_db()
     try:
-        # Создаем асинхронные клиенты для БД и кеша
         database_service = await create_async_database_manager(db)
-        cache_manager = await create_async_cache_manager(host = os.getenv('REDIS_HOST'), port = os.getenv('REDIS_PORT'), new_db = 0, old_db = 1)
+        cache_manager = await create_async_cache_manager(
+            host='redis',
+            port=6379,
+            new_db=0,
+            old_db=1
+        )
 
         # Оборачиваем в UnitOfWork
         async with AsyncUnitOfWork(database_service, cache_manager) as uow:
@@ -39,19 +44,20 @@ async def async_save_to_db_and_cache(result):
                 )
                 await cache_manager.bulk_set(batch)
 
-        logger.info("Рекомендации успешно сохранены в БД и кэш.")
+        #logger.info("Рекомендации успешно сохранены в БД и кэш.")
 
     except Exception as e:
-        logger.error(f"Ошибка при сохранении данных в БД и кэш: {e}")
+        #logger.error(f"Ошибка при сохранении данных в БД и кэш: {e}")
         raise
 
-@celery.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 10})
-def generate_recommendation_task(self):
+
+def generate_recommendation_task():
     """
     Синхронная Celery-таска:
     1. Генерирует рекомендации (синхронно).
     2. Вызывает асинхронную функцию для сохранения в БД и кэш.
     """
+    loop = None
     try:
         # 1. Генерация рекомендаций (синхронно)
         engine = RecommendationEnginePandas(settings.file_system_path, 20)
@@ -59,9 +65,18 @@ def generate_recommendation_task(self):
         result = service.generate_recommendations()
 
         # 2. Запускаем асинхронное сохранение в фоне с использованием уже активного event loop
-        loop = asyncio.get_event_loop()
-        loop.create_task(async_save_to_db_and_cache(result))  # Не блокирует основной процесс
-
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(async_save_to_db_and_cache(result))
     except Exception as e:
-        logger.error(f"Ошибка в Celery-таске: {e}")
-        raise self.retry(exc=e)
+        with open("error.txt", "w") as f:
+            f.write(traceback.format_exc())  # Записываем ошибку в файл
+        os.kill(os.getppid(), signal.SIGUSR1)  # Отправляем сигнал родителю
+
+
+def error_handler(signum, frame):
+    """Функция обработчика сигнала, вызывается при получении SIGUSR1"""
+    with open("error.txt", "r") as f:
+        error = f.read().strip()
+        raise Exception(f"Ошибка в дочернем процессе:\n{error}")
+

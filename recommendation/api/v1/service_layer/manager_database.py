@@ -1,5 +1,7 @@
 from typing import Dict, Any, List
 
+import pandas
+
 from recommendation.api.v1.domain.database_repository import DatabaseRepository
 
 
@@ -29,6 +31,15 @@ class DataBaseService:
             Dict[str, Any] | None: Результат операции или None в случае успеха.
         """
         return await self.repository.bulk_update(query, params)
+
+    def batch_generator(self, df: pandas.DataFrame, batch_size: int = 1000):
+        """
+        Перенаправляет вызов к методу batch_generator из репозитория.
+        """
+        if hasattr(self.repository, 'batch_generator'):
+            return self.repository.batch_generator(df, batch_size)
+        else:
+            raise NotImplementedError("batch_generator не реализован в репозитории.")
 
     async def get(self, model: Any, key: Any):
         """Получает запись по ключу"""
