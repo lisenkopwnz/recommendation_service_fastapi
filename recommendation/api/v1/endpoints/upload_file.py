@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from fastapi import UploadFile, File, APIRouter, Request, HTTPException
+from fastapi import UploadFile, File, APIRouter, Request
 from starlette.responses import JSONResponse
 from recommendation.config import settings
 
@@ -25,7 +25,7 @@ async def load_dataset(request: Request, file: UploadFile = File(...)):
     try:
         # Уведомляем шину событий о загрузке файла, передавая файл и путь для сохранения
         await request.app.state.event_bus.notify(
-            "file_uploaded", file=file, file_path=settings.file_system_path
+            "file_uploaded", file=file, path_uploaded_data_file=settings.path_uploaded_data_file
         )
 
         # Инициируем процесс генерации рекомендаций
@@ -40,7 +40,3 @@ async def load_dataset(request: Request, file: UploadFile = File(...)):
     except Exception as e:
         # В случае ошибки возвращаем код 500 и сообщение об ошибке
         raise Exception(f"Внутренняя ошибка сервера: {str(e)}")
-
-    except HTTPException as e:
-        # Обрабатываем исключения HTTP и повторно выбрасываем их
-        raise HTTPException(status_code=e.status_code, detail=e.detail)

@@ -8,7 +8,8 @@ services:
     command: bash -c "/usr/local/bin/entrypoint.sh uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     container_name: recommendation_service
     volumes:
-      - .:/recommendation_service
+      - .:/recommendation_service  # Монтируем весь проект внутрь контейнера, чтобы изменения на хосте сразу отражались в контейнере
+      - ./uploaded_files:${PATH_UPLOADED_DATA_FILE}  # Монтируем локальную папку для загруженных файлов в контейнер (путь внутри контейнера задаётся через переменную окружения)
     env_file:
       - .env
     ports:

@@ -1,6 +1,5 @@
 from fastapi import UploadFile
-from recommendation.api.v1.utils.data_sources.file_saver import FileHandlerCSV
-from recommendation.api.v1.utils.data_sources.interface import DataSourceABC
+from recommendation.api.v1.service_layer.file_saver import FileHandlerCSV
 
 
 class FileSaverFactory:
@@ -9,7 +8,7 @@ class FileSaverFactory:
     """
 
     @staticmethod
-    def get_saver(file: UploadFile, save_path: str) -> DataSourceABC:
+    def get_saver(file: UploadFile, path_uploaded_data_file: str):
         """
         Возвращает подходящий объект для сохранения файла в зависимости от его формата.
 
@@ -24,6 +23,6 @@ class FileSaverFactory:
             ValueError: Если формат файла не поддерживается.
         """
         if file.filename.endswith(".csv"):
-            return FileHandlerCSV(file, save_path)
+            return FileHandlerCSV(file, path_uploaded_data_file)
         else:
-            raise ValueError("Формат файла не поддерживается. Поддерживаются только CSV-файлы.")
+            raise ValueError("Формат файла не поддерживается.")

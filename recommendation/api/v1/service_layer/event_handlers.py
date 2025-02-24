@@ -2,7 +2,7 @@ import multiprocessing
 import signal
 
 from recommendation.api.v1.service_layer.task import generate_recommendation_task, error_handler
-from recommendation.api.v1.utils.data_sources.factory_saver import FileSaverFactory
+from recommendation.api.v1.service_layer.factory_saver_upload_file import FileSaverFactory
 
 
 async def generate_recommendations_handler():
@@ -21,7 +21,7 @@ async def generate_recommendations_handler():
     process.daemon = True
     process.start()
 
-async def save_file_handler(file, file_path):
+async def save_file_handler(file, path_uploaded_data_file):
     """
     Обработчик события для сохранения файла.
 
@@ -36,7 +36,7 @@ async def save_file_handler(file, file_path):
     Асинхронно сохраняет файл в файловой системе.
     """
     # Получаем соответствующий механизм сохранения файла через фабрику
-    file_saver = FileSaverFactory.get_saver(file, file_path)
+    file_saver = FileSaverFactory.get_saver(file, path_uploaded_data_file)
 
     # Асинхронно сохраняем файл
     await file_saver.save_file()

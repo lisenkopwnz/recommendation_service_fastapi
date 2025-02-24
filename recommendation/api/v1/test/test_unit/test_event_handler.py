@@ -5,7 +5,7 @@ from starlette.datastructures import UploadFile
 
 from recommendation.api.v1.service_layer.event_handlers import generate_recommendations_handler, save_file_handler
 from recommendation.api.v1.service_layer.task import generate_recommendation_task
-from recommendation.api.v1.utils.data_sources.factory_saver import FileSaverFactory
+from recommendation.api.v1.service_layer.factory_saver_upload_file import FileSaverFactory
 
 
 @pytest.mark.asyncio
