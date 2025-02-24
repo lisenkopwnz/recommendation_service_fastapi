@@ -1,5 +1,4 @@
 import logging
-import multiprocessing
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,9 +8,10 @@ from starlette.responses import JSONResponse
 
 from recommendation.api.v1.adapters.models import init_db
 from recommendation.api.v1.endpoints.upload_file import router as file_router
-from recommendation.api.v1.endpoints.get_videos_recommendation import router as recommendation_router
-from recommendation.api.v1.service_layer.event_bus import EventBus
-from recommendation.api.v1.service_layer.event_handlers import generate_recommendations_handler, save_file_handler
+from recommendation.api.v1.endpoints.video_recommendation import router as recommendation_router
+from recommendation.api.v1.service_layer.events.event_bus import EventBus
+from recommendation.api.v1.service_layer.events.event_handlers import generate_recommendations_handler, save_file_handler
+from recommendation.api.v1.service_layer.similar_videos import get_similar_videos
 
 logging.basicConfig(level=logging.INFO)
 

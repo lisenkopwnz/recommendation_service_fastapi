@@ -1,0 +1,73 @@
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 281, in connect
+    await self.retry.call_with_retry(
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/retry.py", line 59, in call_with_retry
+    return await do()
+           ^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 697, in _connect
+    reader, writer = await asyncio.open_connection(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/streams.py", line 48, in open_connection
+    transport, _ = await loop.create_connection(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 1046, in create_connection
+    infos = await self._ensure_resolved(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 1420, in _ensure_resolved
+    return await loop.getaddrinfo(host, port, family=family, type=type,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/recommendation_service/recommendation/api/v1/service_layer/task.py", line 45, in async_save_to_db_and_cache
+    await cache_manager.bulk_set(batch)
+  File "/recommendation_service/recommendation/api/v1/service_layer/manager_storage.py", line 26, in bulk_set
+    await self.storage.bulk_set(data)
+  File "/recommendation_service/recommendation/api/v1/adapters/storage_cache_redis.py", line 64, in bulk_set
+    old_value = await self.new_client.get(key)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/client.py", line 611, in execute_command
+    conn = self.connection or await pool.get_connection(command_name, **options)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 1064, in get_connection
+    await self.ensure_connection(connection)
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 1097, in ensure_connection
+    await connection.connect()
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 289, in connect
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error -3 connecting to redis:6379. Temporary failure in name resolution.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/recommendation_service/recommendation/api/v1/service_layer/task.py", line 70, in generate_recommendation_task
+    loop.run_until_complete(async_save_to_db_and_cache(result))
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/recommendation_service/recommendation/api/v1/service_layer/task.py", line 32, in async_save_to_db_and_cache
+    async with AsyncUnitOfWork(database_service, cache_manager) as uow:
+  File "/recommendation_service/recommendation/api/v1/adapters/storage_cache_redis.py", line 88, in rollback
+    keys = await self.old_client.keys()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/client.py", line 611, in execute_command
+    conn = self.connection or await pool.get_connection(command_name, **options)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 1064, in get_connection
+    await self.ensure_connection(connection)
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 1097, in ensure_connection
+    await connection.connect()
+  File "/usr/local/lib/python3.11/site-packages/redis/asyncio/connection.py", line 289, in connect
+    raise ConnectionError(self._error_message(e))
+redis.exceptions.ConnectionError: Error -3 connecting to redis:6379. Temporary failure in name resolution.

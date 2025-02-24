@@ -2,10 +2,10 @@ import multiprocessing
 import signal
 
 from recommendation.api.v1.service_layer.task import generate_recommendation_task, error_handler
-from recommendation.api.v1.service_layer.factory_saver_upload_file import FileSaverFactory
+from recommendation.api.v1.service_layer.file_storage.factory_saver_upload_file import FileSaverFactory
 
 
-async def generate_recommendations_handler():
+async def generate_recommendations_handler(file_name):
     """
     Обработчик события для генерации рекомендаций.
 
@@ -17,7 +17,7 @@ async def generate_recommendations_handler():
     приложения.
     """
     signal.signal(signal.SIGUSR1, error_handler)
-    process = multiprocessing.Process(target=generate_recommendation_task)
+    process = multiprocessing.Process(target=generate_recommendation_task ,args=(file_name,))
     process.daemon = True
     process.start()
 

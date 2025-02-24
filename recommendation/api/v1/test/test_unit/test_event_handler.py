@@ -3,9 +3,9 @@ from unittest.mock import patch, AsyncMock
 import pytest
 from starlette.datastructures import UploadFile
 
-from recommendation.api.v1.service_layer.event_handlers import generate_recommendations_handler, save_file_handler
+from recommendation.api.v1.service_layer.events.event_handlers import generate_recommendations_handler, save_file_handler
 from recommendation.api.v1.service_layer.task import generate_recommendation_task
-from recommendation.api.v1.service_layer.factory_saver_upload_file import FileSaverFactory
+from recommendation.api.v1.service_layer.file_storage.factory_saver_upload_file import FileSaverFactory
 
 
 @pytest.mark.asyncio

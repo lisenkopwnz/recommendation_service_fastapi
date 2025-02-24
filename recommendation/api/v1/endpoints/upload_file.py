@@ -29,7 +29,7 @@ async def load_dataset(request: Request, file: UploadFile = File(...)):
         )
 
         # Инициируем процесс генерации рекомендаций
-        await request.app.state.event_bus.notify("generate_recommendations")
+        await request.app.state.event_bus.notify("generate_recommendations",file_name=file.filename)
 
         # Возвращаем успешный ответ с кодом 200 и сообщением о запуске процесса рекомендаций
         return JSONResponse(

@@ -1,3 +1,6 @@
+from typing import List
+
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, ARRAY, TIMESTAMP, func
@@ -31,3 +34,6 @@ async def init_db():
         # Создаем таблицы через асинхронный коннектор
         await conn.run_sync(Base.metadata.create_all)
 
+class RecommendationResponse(BaseModel):
+    id: int
+    recommendation_id: List[int]  # Массив рекомендаций (ID)

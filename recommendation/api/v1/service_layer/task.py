@@ -51,7 +51,7 @@ async def async_save_to_db_and_cache(result):
         raise
 
 
-def generate_recommendation_task():
+def generate_recommendation_task(file_name):
     """
     Синхронная Celery-таска:
     1. Генерирует рекомендации (синхронно).
@@ -60,7 +60,7 @@ def generate_recommendation_task():
     loop = None
     try:
         # 1. Генерация рекомендаций (синхронно)
-        engine = RecommendationEnginePandas(settings.file_system_path, 20)
+        engine = RecommendationEnginePandas(str(os.path.join(settings.path_uploaded_data_file,file_name)), 20)
         service = RecommendationService(engine)
         result = service.generate_recommendations()
 

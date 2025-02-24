@@ -1,5 +1,5 @@
 from fastapi import UploadFile
-from recommendation.api.v1.service_layer.file_saver import FileHandlerCSV
+from recommendation.api.v1.service_layer.file_storage.file_saver import FileHandlerCSV
 
 
 class FileSaverFactory:
@@ -14,7 +14,7 @@ class FileSaverFactory:
 
         Args:
             file: Файл для сохранения.
-            save_path: Путь для сохранения файла.
+            path_uploaded_data_file: Путь для сохранения файла.
 
         Returns:
             FileSaver: Объект, отвечающий за сохранение файла.
